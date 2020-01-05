@@ -435,6 +435,7 @@ more (int pfile, const char *descr, const char *prompt)
 		  printf( "^C");
 		case 'q':
 		case 'Q':
+		  putchar('\n');
 		  return (0);
 
 		case 'n':
