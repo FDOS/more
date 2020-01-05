@@ -451,9 +451,10 @@ more (int pfile, const char *descr, const char *prompt)
 	      switch (key)
 		{
 		case CTRL_C:
-		  PRINTF( "^C");
+		  PRINTF("^C");
 		case 'q':
 		case 'Q':
+		  PRINTF("\n");
 		  return (0);
 
 		case 'n':
