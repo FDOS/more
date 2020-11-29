@@ -55,8 +55,7 @@ char *processEscChars(char *line);  /* Converts c escape sequences to chars */
 
 
 
-
-#if 1							/* it's not very portable ;) */
+#if 1             /* it's not very portable ;) */
 
 #include <dos.h>
 /* assert we are running in small model */
@@ -73,76 +72,103 @@ int dos_read(int file, void *ptr, unsigned count);
 void dos_close(int file);
 #define close(file) dos_close(file)
 
-#ifdef __WATCOMC__
-
-#pragma aux dos_open = \
-"mov ax, 0x3d00" \
-"int 0x21" \
-"jnc noerror" \
-"mov ax, 0xffff" \
-"noerror:" \
-parm [dx] [ax] value [ax];
-
-#pragma aux dos_read = \
-"mov ah, 0x3f" \
-"int 0x21" \
-"jnc noerror" \
-"xor ax, ax" \
-"noerror:" \
-parm [bx] [dx] [cx] value [ax];
-
-#pragma aux dos_close = \
-"mov ah, 0x3e" \
-"int 0x21" \
-parm [bx];
-
-#else
-
 int dos_open(char *filename, int mode)
-{   
-  union REGS r;
+{
+
+  #ifdef __WATCOMC__
+
+    int __dos_open_watasm (char *filename, int mode);
+
+    #pragma aux __dos_open_watasm = \
+    "mov ax, 0x3d00" \
+    "int 0x21" \
+    "jnc noerror" \
+    "mov ax, 0xffff" \
+    "noerror:" \
+    parm [dx] [ax] value [ax];
+
+    return __dos_open_watasm(filename, mode);
+
+  #else
+
+    union REGS r;
 	
-  if (mode);					/* mode ignored - readonly supported */
-	
-  r.h.ah = 0x3d;
-  r.h.al = 0;					/* read mode only supoported now !! */
-  r.x.dx = (unsigned)filename;
-  intdos(&r,&r);
-	
-  if (r.x.cflag)
-    return -1;
-  return r.x.ax;
+    if (mode);					/* mode ignored - readonly supported */
+
+    r.h.ah = 0x3d;
+    r.h.al = 0;					/* read mode only supoported now !! */
+    r.x.dx = (unsigned)filename;
+    intdos(&r,&r);
+
+    if (r.x.cflag)
+      return -1;
+    return r.x.ax;
+
+  #endif
+
 }			
 
 int dos_read(int file, void *ptr, unsigned count)
 {   
-  union REGS r;
-	
-  r.h.ah = 0x3f;
-  r.x.bx = file;
-  r.x.cx = count;
-  r.x.dx = (unsigned)ptr;
-  intdos(&r,&r);
-	
-  if (r.x.cflag)
-    return 0;
-  return r.x.ax;
+  #ifdef __WATCOMC__
+
+    int __dos_read_watasm(int file, void *ptr, unsigned count);
+
+    #pragma aux __dos_read_watasm = \
+    "mov ah, 0x3f" \
+    "int 0x21" \
+    "jnc noerror" \
+    "xor ax, ax" \
+    "noerror:" \
+    parm [bx] [dx] [cx] value [ax];
+
+    return __dos_read_watasm(file, ptr, count);
+
+  #else
+
+    union REGS r;
+    
+    r.h.ah = 0x3f;
+    r.x.bx = file;
+    r.x.cx = count;
+    r.x.dx = (unsigned)ptr;
+    intdos(&r,&r);
+    
+    if (r.x.cflag)
+      return 0;
+    return r.x.ax;
+
+  #endif
+
 }			
 
 void dos_close(int file)
-{   
-  union REGS r;
+{ 
+  #ifdef __WATCOMC__
+
+    void __dos_close_watasm(int file);
+
+    #pragma aux __dos_close_watasm = \
+    "mov ah, 0x3e" \
+    "int 0x21" \
+    parm [bx];
+  
+    __dos_close_watasm(file);
+    
+  #else
+
+    union REGS r;
+    
+    r.h.ah = 0x3e;
+    r.x.bx = file;
+    intdos(&r,&r);
+  #endif
+}
 	
-  r.h.ah = 0x3e;
-  r.x.bx = file;
-  intdos(&r,&r);
-}			
-	
-#endif
-#endif
+#endif /* not very portable */
 
 
-#ifndef NOCATS
+#if !( defined(NOCATS) || defined(NOKITTEN) )
 nl_catd _kitten_catalog = 0;			/* _kitten_catalog descriptor, either 0 or 1 */
 
 

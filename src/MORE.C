@@ -37,16 +37,20 @@
 
 
 
-
 #include <stdio.h>
 #include <stdlib.h>			/* for _splitpath, _makepath */
-
-#include <dir.h>			/* for findfirst, findnext */
 #include <dos.h>			/* for findfirst, findnext */
 #include <bios.h>			/* for _bios_keybrd - see keypress() */
 #include <conio.h>			/* for getch - see keypress() */
 
 #include "kitten.h"			/* Cats message library */
+
+#ifdef __WATCOMC__
+#include <fcntl.h>
+#include "compat.h"
+#else /* not __WATCOMC__ */
+#include <dir.h>			/* for findfirst, findnext */
+#endif
 
 #ifndef _MAX_DRIVE	/* TC 2.01, TC++ 1.0 */
 #define  _MAX_DRIVE  MAXDRIVE
@@ -60,6 +64,7 @@
 	
 #endif	
 
+/* Reuse dos_read, dos_open, dos_close defined in kitten. */
 int dos_read(int file, void *ptr, unsigned count);
 int dos_open(char *filename, int mode);
 int dos_close(int file);
@@ -99,7 +104,7 @@ void GetScreenSize(void)
 
 int more (int pfile, const char *descr, const char *prompt);
 unsigned keypress (void);
-void usage (nl_catd cat);
+void usage (void);
 
 int prompt_for_more(char *filename);
 
@@ -156,7 +161,6 @@ main (int argc, char **argv)
 
   int pfile;				/* file handle */
   struct ffblk ffblk;			/* findfirst, findnext block */
-  nl_catd cat;				/* message catalog */
   int stdinhandle;
   int someFileFound;
   int more_prompt_needed = 0;
@@ -166,8 +170,8 @@ main (int argc, char **argv)
 
   /* Open the message catalog */
 
-  cat = catopen ("more", 0);
-  prompt = catgets (cat, 2, 0, "More");
+  kittenopen ("more");
+  prompt = kittengets (2, 0, "More");
 
   /* Evaluate the files on the command line */
 
@@ -218,10 +222,9 @@ main (int argc, char **argv)
 	case 'h':
 	  /* print usage and quit */
 
-	  s = catgets (cat, 0, 0, "Display the contents of a text file one screen at a time");
+	  s = kittengets (0, 0, "Display the contents of a text file one screen at a time");
 	  printf ("MORE: %s\n", s);
-	  usage (cat);
-	  catclose (cat);
+	  usage ();
 	  exit (0);
 	  break;
 	      
@@ -230,7 +233,7 @@ main (int argc, char **argv)
 	  if ( argv[i][2] < '1' || argv[i][2] > '9')
 	    {
 	      printf("MORE:%s\n",
-		     catgets(cat,1,3,"option /Tabs must be /T1..9 (default 4)\n"));
+		     kittengets(1,3,"option /Tabs must be /T1..9 (default 4)\n"));
 	    			
 	      exit(1);	
 	    }
@@ -241,10 +244,9 @@ main (int argc, char **argv)
 	default:
 	  /* Not a recognized option */
 
-	  s = catgets (cat, 1, 0, "Not a recognized option");
+	  s = kittengets (1, 0, "Not a recognized option");
 	  printf ("MORE: %s: %s\n", argv[i], s);
-	  usage (cat);
-	  catclose (cat);
+	  usage ();
 	  exit (1);
 	  break;
 	} /* switch */
@@ -279,7 +281,7 @@ main (int argc, char **argv)
 	  /* We were not able to find a file. Display a message and
 	     set the exit value. */
 	
-	  s = catgets (cat, 1, 1, "No such file");
+	  s = kittengets (1, 1, "No such file");
 	  printf ( "MORE: %s: %s\n", argv[i], s);
 	  exit(1);
 	}
@@ -306,7 +308,7 @@ main (int argc, char **argv)
 
 	  if (pfile < 0)
 	    {
-	      s = catgets (cat, 1, 2, "Cannot open file");
+	      s = kittengets (1, 2, "Cannot open file");
 	      printf ( "MORE: %s: %s\n", ffblk.ff_name, s);
 	      exit(1);
 	    }
@@ -327,7 +329,7 @@ main (int argc, char **argv)
     {
       /* Process the standard input.  Return from more() is not used. */
 
-      s = catgets (cat, 2, 1, "<STDIN>");
+      s = kittengets (2, 1, "<STDIN>");
       more (stdinhandle, s, prompt);
       exitval = 0;
     }
@@ -335,14 +337,13 @@ main (int argc, char **argv)
 
   /* Done */
 
-  catclose (cat);
-
   return exitval;
 }
 
 /* Since we can show more than one file at a time, we need to
    display a prompt when we are done with a file. */
 
+int
 prompt_for_more(char *descr)
 {
   int key; 
@@ -448,18 +449,47 @@ more (int pfile, const char *descr, const char *prompt)
 
   return 0;
 }
-
-/* Retrieve the next keypress */
-
 
 void idle(void)
 {
-  union REGS r;
-  r.x.ax = 0x1680;		/* application idle */
-  int86(0x2f,&r,&r);			
+  #if __WATCOMC__
+
+    void __idle_watasm(void);
+
+    #pragma aux __idle_watasm = \
+    "mov ax, 0x1680" \
+    "int 0x2f" \
+    modify [ax];
+
+    __idle_watasm();
+
+  #else
+
+    union REGS r;
+    r.x.ax = 0x1680;		/* application idle */
+    int86(0x2f,&r,&r);			
+
+  #endif
+}
+
+#ifdef __WATCOMC__
+/* Retrieve the next keypress */
+unsigned
+keypress(void)
+{
+  for(;;)
+  {
+    if(kbhit())
+      return getch();
+    
+    idle(); /* idle in environments that support it */
+  }
+ return getch();
 }
 
 
+
+#else /* not __WATCOMC__ */
 /* Retrieve the next keypress */
 
 unsigned
@@ -476,23 +506,22 @@ keypress (void)
       intdos(&r,&r);
       /*	printf("al %x flags %x\n",r.h.al,r.x.flags);*/
       if ((r.x.flags & ZERO_FLAG) == 0) /* character available */
-	{
-	  return (int)r.h.al;
-	}
+	    {
+	      return (int)r.h.al;
+	    }
       idle();
     }
 }
 
-
+#endif /* not __WATCOMC__ */
+
 /* A function to display the program's usage */
 
 void
-usage (nl_catd cat)
+usage (void)
 {
   char *s;
   
-  if (cat) ;
-
   /* Show version, copyright, and GNU GPL */
 
   printf ("MORE 4.0, Copyright (C) 1994-2002 Jim Hall <jhall@freedos.org>\n");
@@ -501,29 +530,29 @@ usage (nl_catd cat)
 
   /* Show usage */
 
-  s = catgets (cat, 0, 1, "Usage");
+  s = kittengets (0, 1, "Usage");
   printf ("\n%s:\n", s);
 
-  s = catgets (cat, 0, 2, "command");
+  s = kittengets (0, 2, "command");
   printf ("  %s | MORE [/T4] \n", s);
 
-  s = catgets (cat, 0, 3, "file");
+  s = kittengets (0, 3, "file");
   printf ("  MORE [/T4] %s..\n", s);
   printf ("  MORE [/T4] < %s\n", s);
 
   /* Show available keys, while viewing a file */
 
-  s = catgets (cat, 0, 4, "Available keys");
+  s = kittengets (0, 4, "Available keys");
   printf ("\n%s:\n", s);
 
-  s = catgets (cat, 0, 9, "Space");
+  s = kittengets (0, 9, "Space");
   printf ("  %s = ", s);
-  s = catgets (cat, 0, 10, "Next page");
+  s = kittengets (0, 10, "Next page");
   printf ("%s\n", s);
 
-  s = catgets (cat, 0, 6, "Next file");
+  s = kittengets (0, 6, "Next file");
   printf ("  N n = %s\n", s);
 
-  s = catgets (cat, 0, 8, "Quit program");
+  s = kittengets (0, 8, "Quit program");
   printf ("  Q q = %s\n", s);
 }

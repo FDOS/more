@@ -33,9 +33,6 @@
 #include <stdlib.h>
 #include <bios.h>
 
-#ifdef __WATCOMC__
-#define bioskey(x) getch()
-#endif
 
 #define FALSE 0
 #define TRUE 1

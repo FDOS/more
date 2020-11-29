@@ -33,6 +33,10 @@
 #define catclose(x) 
 #define catgets(c,x,y,s) s
 
+#define kittenopen(x)
+#define kittenclose() 
+#define kittengets(x,y,s) s
+
 #else
 
 
