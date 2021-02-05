@@ -9,7 +9,7 @@ UPX=-rem
 UPX=upx --8086 --best
 
 
-LIBFILES=kitten.c tcdummy.c talloc.c prf.c      
+LIBFILES=../kitten/kitten.c tcdummy.c talloc.c prf.c
 
 
 ############# WATCOM ########################

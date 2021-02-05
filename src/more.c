@@ -43,7 +43,7 @@
 #include <dos.h>			/* for findfirst, findnext */
 #include <bios.h>			/* for _bios_keybrd - see keypress() */
 
-#include "kitten.h"			/* Cats message library */
+#include "../kitten/kitten.h"		/* Cats message library */
 
 #ifndef __WATCOMC__     /* not WATCOM C */
 #include <dir.h>			/* for findfirst, findnext */
