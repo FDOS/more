@@ -1,20 +1,20 @@
 # FreeDOS More NLS file (Latvian)
 # Copyright (c) 2001-2004 by Kristaps Kaupe, Latvia.
 # e-mail: neons@hackers.lv
-0.0:Izvada uz ekrƒna teksta failu, sadalot to lappus‰s
-0.1:LietoÕana
+0.0:Izvada uz ekrÄna teksta failu, sadalot to lappusÄ“s
+0.1:LietoÅ¡ana
 0.2:komanda
 0.3:fails
-0.4:Pieejamie taustiìi
+0.4:Pieejamie taustiÅ†i
 0.5:Nn
-0.6:Nƒkamais fails
+0.6:NÄkamais fails
 0.7:Qq
 0.8:Iziet no programmas
-0.9:Starpotƒjs
-0.10:Nƒkamƒ lapa
-1.0:NeatpazŒstama opcija
-1.1:Nav tƒda faila
-1.2:Nevar atv‰rt failu
-1.3:opcijai /Tabs jƒb×t /T1..9 (noklus‰tais 4)
-2.0:Tƒlƒk
+0.9:StarpotÄjs
+0.10:NÄkamÄ lapa
+1.0:NeatpazÄ«stama opcija
+1.1:Nav tÄda faila
+1.2:Nevar atvÄ“rt failu
+1.3:opcijai /Tabs jÄbÅ«t /T1..9 (noklusÄ“tais 4)
+2.0:TÄlÄk
 2.1:<STDIN>
