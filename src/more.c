@@ -35,54 +35,46 @@
 	
 */
 
-
-
-
 #include <stdio.h>
 #include <stdlib.h>			/* for _splitpath, _makepath */
 #include <dos.h>			/* for findfirst, findnext */
 #include <bios.h>			/* for _bios_keybrd - see keypress() */
+#include <fcntl.h>
 
 #include "../kitten/kitten.h"		/* Cats message library */
 
-#ifndef __WATCOMC__     /* not WATCOM C */
+#if defined(__TURBOC__)
 #include <dir.h>			/* for findfirst, findnext */
-#else
-/* Watcom C */
-#include <conio.h> 			/* for getch - see keypress() */
 
+#ifndef _MAX_DRIVE	/* TC 2.01, TC++ 1.0 */
+#define _MAX_DRIVE MAXDRIVE
+#define _MAX_DIR   MAXDIR
+#define _MAX_FNAME MAXPATH
+#define _MAX_EXT   MAXEXT
+#define _MAX_PATH  MAXPATH
+#define _makepath  fnmerge
+#define _splitpath fnsplit
+#endif
+
+#else /* not Turbo C */
+#include <unistd.h>
+#include <conio.h> 			/* for getch - see keypress() */
+#endif
+
+#ifdef __WATCOMC__
 /* copied from freecom/suppl/suppl.h */
 
 /* redefine struct name */
 #define ffblk find_t
 /* rename one of the member of that struct */
-# define ff_name name
+#define ff_name name
 
 #define findfirst(pattern,buf,attrib) _dos_findfirst((pattern), (attrib)	\
 	, (struct find_t*)(buf))
 #define findnext(buf) _dos_findnext((struct find_t*)(buf))
 #endif /* __WATCOMC__ */
 
-#ifndef _MAX_DRIVE	/* TC 2.01, TC++ 1.0 */
-#define  _MAX_DRIVE  MAXDRIVE
-#define  _MAX_DIR    MAXDIR
-#define  _MAX_FNAME  MAXPATH
-#define  _MAX_EXT    MAXEXT
-#define  _MAX_PATH   MAXPATH
-	
-#define _makepath  fnmerge
-#define _splitpath fnsplit
-	
-#endif	
-
-/* Reuse dos_read, dos_open, dos_close functions defined in kitten. */
-int dos_read(int file, void *ptr, unsigned count);
-int dos_open(char *filename, int mode);
-void dos_close(int file);
-
-
 /* Symbolic constants */
-
 
 #define CTRL_C 3			/* control-c */
 
@@ -207,7 +199,7 @@ main (int argc, char **argv)
       exit(1);
     }
 	
-  dos_close(0);	
+  close(0);
 	
   if (dos_dup2(2,0))
     {
@@ -318,7 +310,7 @@ main (int argc, char **argv)
 	    }  
 
 	  _makepath (fullpath, drive, dir, ffblk.ff_name, "");
-	  pfile = dos_open (fullpath, 0);
+	  pfile = open (fullpath, O_RDONLY);
 
 	  if (pfile < 0)
 	    {
@@ -330,7 +322,7 @@ main (int argc, char **argv)
 	  more_prompt_needed = 1; 
 	  
 	  more (pfile, ffblk.ff_name, prompt);
-	  dos_close (pfile);
+	  close (pfile);
 	  exitval = 0;
 
 
@@ -401,7 +393,7 @@ more (int pfile, const char *descr, const char *prompt)
   int nlines = 0;			/* no. of lines printed per screen */
   unsigned linecount = 0;
 
-  while (dos_read (pfile,&ch,1) > 0)
+  while (read (pfile,&ch,1) > 0)
     {
       if (ch != '\t')
 	{
@@ -480,7 +472,7 @@ void idle(void)
 /* Retrieve the next keypress */
 
 
-#ifndef __WATCOMC__
+#ifdef __TURBOC__
 unsigned
 keypress (void)
 {
@@ -502,7 +494,7 @@ keypress (void)
     }
 }
 
-#else /* WATCOMC */
+#else /* not Turbo C */
 
 /* Retrieve the next keypress */
 
@@ -522,7 +514,6 @@ keypress(void)
 
 #endif
 
-
 /* A function to display the program's usage */
 
 void
