@@ -61,6 +61,10 @@
 #include <conio.h> 			/* for getch - see keypress() */
 #endif
 
+#if defined(__GNUC__)
+#define far __far
+#endif
+
 #ifdef __WATCOMC__
 /* copied from freecom/suppl/suppl.h */
 
