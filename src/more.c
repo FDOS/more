@@ -525,7 +525,7 @@ usage (nl_catd cat)
 {
   char *s;
   
-  cat;
+  (void)cat;
 
   /* Show version, copyright, and GNU GPL */
 
