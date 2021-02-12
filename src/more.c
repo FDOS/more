@@ -59,14 +59,6 @@
 #else /* not Turbo C */
 #include <unistd.h>
 #include <conio.h> 			/* for getch - see keypress() */
-#endif
-
-#if defined(__GNUC__)
-#define far __far
-#endif
-
-#ifdef __WATCOMC__
-/* copied from freecom/suppl/suppl.h */
 
 /* redefine struct name */
 #define ffblk find_t
@@ -76,7 +68,12 @@
 #define findfirst(pattern,buf,attrib) _dos_findfirst((pattern), (attrib)	\
 	, (struct find_t*)(buf))
 #define findnext(buf) _dos_findnext((struct find_t*)(buf))
-#endif /* __WATCOMC__ */
+#endif
+
+#if defined(__GNUC__)
+#include <libi86/stdlib.h>
+#define far __far
+#endif
 
 /* Symbolic constants */
 

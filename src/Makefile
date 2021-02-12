@@ -11,7 +11,7 @@ UPX=upx --8086 --best
 all: more.exe
 
 more.exe more.com: more.c ../kitten/kitten.c
-	$(CC) $(CFLAGS)$@ $^
+	$(CC) $(CFLAGS)$@ $^ $(LDFLAGS)
 	$(UPX) $@
 
 clean:
