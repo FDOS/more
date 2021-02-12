@@ -35,7 +35,16 @@
 	
 */
 
+#if 1
+int Xprintf(const char * fmt, ...);
+int Xsprintf(char *, const char * fmt, ...);
+#define PRINTF Xprintf
+#define SPRINTF Xsprintf
+#else
 #include <stdio.h>
+#define PRINTF printf
+#define SPRINTF sprintf
+#endif
 #include <stdlib.h>			/* for _splitpath, _makepath */
 #include <dos.h>			/* for findfirst, findnext */
 #include <bios.h>			/* for _bios_keybrd - see keypress() */
@@ -98,7 +107,7 @@ void GetScreenSize(void)
 	  LINES= bios_screensize/bios_screencols/2;
 	}
             
-      /* printf("BIOS screen size = %u/%u\n",LINES,COLS);    */
+      /* PRINTF("BIOS screen size = %u/%u\n",LINES,COLS);    */
     }   
 
 }
@@ -119,7 +128,7 @@ int dos_dup(int handle)
   r.h.ah = 0x45;	/* dosdup */
   r.x.bx = handle;
   intdos(&r,&r);
-  /* printf("dos dup new %x - %x %x\n",r.x.ax,r.x.cflag); */
+  /* PRINTF("dos dup new %x - %x %x\n",r.x.ax,r.x.cflag); */
   
   if (r.x.cflag) 
     return -1;
@@ -134,7 +143,7 @@ int dos_dup2(int handle,int duphandle)
   r.x.bx = handle;
   r.x.cx = duphandle;
   intdos(&r,&r);
-  /* printf("dos2 dup new %x - %x %x\n",r.x.ax,r.x.cflag); */
+  /* PRINTF("dos2 dup new %x - %x %x\n",r.x.ax,r.x.cflag); */
   
   if (r.x.cflag) 
     return r.x.ax;
@@ -196,7 +205,7 @@ main (int argc, char **argv)
   stdinhandle = dos_dup(0);
   if (stdinhandle < 0)
     {
-      printf("??\n");
+      PRINTF("??\n");
       exit(1);
     }
 	
@@ -204,7 +213,7 @@ main (int argc, char **argv)
 	
   if (dos_dup2(2,0))
     {
-      printf("???\n");
+      PRINTF("???\n");
       exit(1);   
     }
 	    
@@ -228,7 +237,7 @@ main (int argc, char **argv)
 	  /* print usage and quit */
 
 	  s = catgets (cat, 0, 0, "Display the contents of a text file one screen at a time");
-	  printf ("MORE: %s\n", s);
+	  PRINTF ("MORE: %s\n", s);
 	  usage (cat);
 	  catclose (cat);
 	  exit (0);
@@ -238,7 +247,7 @@ main (int argc, char **argv)
 	case 'T':
 	  if ( argv[i][2] < '1' || argv[i][2] > '9')
 	    {
-	      printf("MORE:%s\n",
+	      PRINTF("MORE:%s\n",
 		     catgets(cat,1,3,"option /Tabs must be /T1..9 (default 4)\n"));
 	    			
 	      exit(1);	
@@ -251,7 +260,7 @@ main (int argc, char **argv)
 	  /* Not a recognized option */
 
 	  s = catgets (cat, 1, 0, "Not a recognized option");
-	  printf ("MORE: %s: %s\n", argv[i], s);
+	  PRINTF ("MORE: %s: %s\n", argv[i], s);
 	  usage (cat);
 	  catclose (cat);
 	  exit (1);
@@ -289,7 +298,7 @@ main (int argc, char **argv)
 	     set the exit value. */
 	
 	  s = catgets (cat, 1, 1, "No such file");
-	  printf ( "MORE: %s: %s\n", argv[i], s);
+	  PRINTF ( "MORE: %s: %s\n", argv[i], s);
 	  exit(1);
 	}
 
@@ -316,7 +325,7 @@ main (int argc, char **argv)
 	  if (pfile < 0)
 	    {
 	      s = catgets (cat, 1, 2, "Cannot open file");
-	      printf ( "MORE: %s: %s\n", ffblk.ff_name, s);
+	      PRINTF ( "MORE: %s: %s\n", ffblk.ff_name, s);
 	      exit(1);
 	    }
 	 
@@ -357,16 +366,16 @@ prompt_for_more(char *descr)
 {
   int key; 
   
-  printf( "-- %s (EOF) --", descr);
+  PRINTF( "-- %s (EOF) --", descr);
   key = keypress();
-  printf("\n");
+  PRINTF("\n");
 
   /* Do we quit or move to next file? */
 
   switch (key)
     {
     case CTRL_C:
-      printf( "^C");
+      PRINTF( "^C");
     case 'q':
     case 'Q':
       return (0);
@@ -398,12 +407,12 @@ more (int pfile, const char *descr, const char *prompt)
     {
       if (ch != '\t')
 	{
-	  printf("%c",ch);
+	  PRINTF("%c",ch);
 	  nchars++;
         }
       else
 	do {                /* tab expansion */
-	  printf(" ");
+	  PRINTF(" ");
 	  nchars++;
 	} while ( nchars < COLS && nchars % TABSIZE );
 
@@ -428,13 +437,13 @@ more (int pfile, const char *descr, const char *prompt)
 	      /* Since we don't necessarily know if the user is
 	         redirecting to a file, always display on stderr. */
 
-	      printf( "-- %s -- %s (%u)--", prompt, descr, linecount);
+	      PRINTF( "-- %s -- %s (%u)--", prompt, descr, linecount);
 	      key = keypress();
-	      printf("%40s\r","");
+	      PRINTF("%40s\r","");
 	      nlines = 0;
 
 #if 0 /* debugging */
-	      printf( "key=%d,%c\n", key, key);
+	      PRINTF( "key=%d,%c\n", key, key);
 #endif /* debugging */
 
 	      /* Do we quit or move to next file? */
@@ -442,7 +451,7 @@ more (int pfile, const char *descr, const char *prompt)
 	      switch (key)
 		{
 		case CTRL_C:
-		  printf( "^C");
+		  PRINTF( "^C");
 		case 'q':
 		case 'Q':
 		  return (0);
@@ -486,7 +495,7 @@ keypress (void)
       r.h.ah = 0x06;	/* direct console input */
       r.h.dl = 0xff;
       intdos(&r,&r);
-      /*	printf("al %x flags %x\n",r.h.al,r.x.flags);*/
+      /*	PRINTF("al %x flags %x\n",r.h.al,r.x.flags);*/
       if ((r.x.flags & ZERO_FLAG) == 0) /* character available */
 	{
 	  return (int)r.h.al;
@@ -526,35 +535,35 @@ usage (nl_catd cat)
 
   /* Show version, copyright, and GNU GPL */
 
-  printf ("MORE 4.0, Copyright (C) 1994-2002 Jim Hall <jhall@freedos.org>\n");
-  printf ("  This is free software, and you are welcome to redistribute it\n");
-  printf ("  under the GNU GPL; see the COPYING file for details.\n");
+  PRINTF ("MORE 4.0, Copyright (C) 1994-2002 Jim Hall <jhall@freedos.org>\n");
+  PRINTF ("  This is free software, and you are welcome to redistribute it\n");
+  PRINTF ("  under the GNU GPL; see the COPYING file for details.\n");
 
   /* Show usage */
 
   s = catgets (cat, 0, 1, "Usage");
-  printf ("\n%s:\n", s);
+  PRINTF ("\n%s:\n", s);
 
   s = catgets (cat, 0, 2, "command");
-  printf ("  %s | MORE [/T4] \n", s);
+  PRINTF ("  %s | MORE [/T4] \n", s);
 
   s = catgets (cat, 0, 3, "file");
-  printf ("  MORE [/T4] %s..\n", s);
-  printf ("  MORE [/T4] < %s\n", s);
+  PRINTF ("  MORE [/T4] %s..\n", s);
+  PRINTF ("  MORE [/T4] < %s\n", s);
 
   /* Show available keys, while viewing a file */
 
   s = catgets (cat, 0, 4, "Available keys");
-  printf ("\n%s:\n", s);
+  PRINTF ("\n%s:\n", s);
 
   s = catgets (cat, 0, 9, "Space");
-  printf ("  %s = ", s);
+  PRINTF ("  %s = ", s);
   s = catgets (cat, 0, 10, "Next page");
-  printf ("%s\n", s);
+  PRINTF ("%s\n", s);
 
   s = catgets (cat, 0, 6, "Next file");
-  printf ("  N n = %s\n", s);
+  PRINTF ("  N n = %s\n", s);
 
   s = catgets (cat, 0, 8, "Quit program");
-  printf ("  Q q = %s\n", s);
+  PRINTF ("  Q q = %s\n", s);
 }
