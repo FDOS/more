@@ -14,8 +14,14 @@ more.exe more.com: more.c prf.c ../kitten/kitten.c
 	$(CC) $(CFLAGS)$@ $^ $(LDFLAGS)
 	$(UPX) $@
 
+_more.exe _more.com: more.c prf.c
+	$(CC) $(CFLAGS)$@ $^ $(LDFLAGS)
+	$(UPX) $@
+
 clean:
 	$(RM) more.exe
 	$(RM) more.com
+	$(RM) _more.exe
+	$(RM) _more.com
 	$(RM) *.o
 	$(RM) *.obj

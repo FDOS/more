@@ -32,4 +32,8 @@ set TARGET=more.exe
 goto doit
 
 :doit
+rem # if you want to build without kitten uncomment the following
+rem set CFLAGS=-DNOCATS %CFLAGS%
+rem set TARGET=_%TARGET%
+
 make -C src %TARGET%
