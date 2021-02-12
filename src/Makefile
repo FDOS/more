@@ -10,7 +10,7 @@ UPX=upx --8086 --best
 
 all: more.exe
 
-more.exe more.com: more.c ../kitten/kitten.c
+more.exe more.com: more.c prf.c ../kitten/kitten.c
 	$(CC) $(CFLAGS)$@ $^ $(LDFLAGS)
 	$(UPX) $@
 

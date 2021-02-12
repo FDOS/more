@@ -26,7 +26,13 @@
 /* Cambridge, MA 02139, USA.                                    */
 /****************************************************************/
 
+#ifndef __GNUC__
 #include <io.h>
+#else
+#define _BORLANDC_SOURCE
+#define far __far
+#endif
+
 #include <conio.h>
 #include <dos.h>
 #include <stdarg.h>
@@ -46,7 +52,9 @@ static void handle_char(int);
 static void put_console(int);
 static char * ltob(long, char *, int);
 static int do_printf(const char *, register va_list);
-int printf(const char * fmt, ...);
+
+int Xprintf(const char * fmt, ...);
+int Xsprintf(char * buff, const char * fmt, ...);
 
 /* The following is user supplied and must match the following prototype */
 void cso(int);
@@ -61,28 +69,22 @@ int fstrlen(char far * s)
   return i;
 }
 
-#ifdef __WATCOMC__
-void writechar(char c);
-#pragma aux writechar = \
-  "mov ah, 2" \
-  "int 0x21" \
-parm [dl];
-#endif
+void writechar(char c)
+{
+  union REGS r;
+
+  r.h.ah = 0x02; /* direct character output */
+  r.h.dl = c;
+  intdos(&r, &r);
+}
 
 void put_console(int c)
 {
   if (c == '\n')
     put_console('\r');
 
-#ifdef __WATCOMC__
-  writechar(c);
-#else
- 
   /* write(1, &c, 1); */             /* write character to stdout */
-  _AH = 0x02;
-  _DL = c;
-  __int__(0x21);
-#endif
+  writechar(c);
 }
 
 /* special handler to switch between sprintf and printf */
@@ -134,7 +136,7 @@ char *ltob(long n, char * s, int base)
 #define RIGHT   1
 
 /* printf -- short version of printf to conserve space */
-int printf(const char * fmt, ...)
+int Xprintf(const char * fmt, ...)
 {
   va_list arg;
 
@@ -143,7 +145,7 @@ int printf(const char * fmt, ...)
   return do_printf(fmt, arg);
 }
 
-int sprintf(char * buff, const char * fmt, ...)
+int Xsprintf(char * buff, const char * fmt, ...)
 {
   va_list arg;
 
@@ -166,7 +168,9 @@ unsigned long far retcs(int i)
 int do_printf(const char * fmt, va_list arg)
 {
   int base;
-  char s[11], far * p;
+  char s[11];
+  char far * p;
+
   int c, flag, size, fill;
   int longarg;
   long currentArg;
@@ -231,9 +235,10 @@ int do_printf(const char * fmt, va_list arg)
 
       case 'p':
         {
-          unsigned short w0 = va_arg(arg, unsigned short);
+          unsigned short w0 = va_arg(arg, unsigned int);
+          unsigned short w1 = va_arg(arg, unsigned int);
           char *tmp = charp;
-          sprintf(s, "%04x:%04x", va_arg(arg, unsigned short), w0);
+          Xsprintf(s, "%04x:%04x", w1, w0);
           p = s;
           charp = tmp;
           goto do_outputstring;
@@ -318,9 +323,10 @@ int do_printf(const char * fmt, va_list arg)
 
 */
 #include <conio.h>
-void cso(char c)
+#include <string.h>
+void cso(int c)
 {
-  putch(c);
+  writechar(c);
 }
 
 struct {
@@ -395,31 +401,32 @@ struct {
   {
 "ptr 1234:5678", "ptr %p", 0x5678, 0x1234}, 0};
 
-test(char *should, char *format, unsigned lowint, unsigned highint)
+void test(char *should, char *format, unsigned lowint, unsigned highint)
 {
   char b[100];
 
-  sprintf(b, format, lowint, highint);
+  Xsprintf(b, format, lowint, highint);
 
-  printf("'%s' = '%s'\n", should, b);
+  Xprintf("'%s' = '%s'\n", should, b);
 
   if (strcmp(b, should))
   {
-    printf("\nhit the ANYKEY\n");
+    Xprintf("\nhit the ANYKEY\n");
     getch();
   }
 }
 
-main()
+int main()
 {
   int i;
-  printf("hello world\n");
+  Xprintf("hello world\n");
 
   for (i = 0; testarray[i].should; i++)
   {
     test(testarray[i].should, testarray[i].format, testarray[i].lowint,
          testarray[i].highint);
   }
+  return 0;
 }
 #endif
 
