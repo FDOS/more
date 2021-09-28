@@ -1,3 +1,4 @@
+# Language: Swedish (CP850)
 # Translation by Martin Strömberg <ams@ludd.luth.se>.
 0.0:Visa innehållet i en textfil en skärm i taget
 0.1:Användning
