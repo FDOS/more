@@ -1,8 +1,8 @@
-<div class="moz-text-flowed" style="font-family: -moz-fixed">0.0:Toont de inhoud van een tekstbestand met 1 scherm per keer
+0.0:Toont de inhoud van een tekstbestand met 1 scherm per keer
 0.1:Gebruikswijze
 0.2:opdracht
 0.3:bestand
-0.4:Te gebruiken toetsen
+0.4:Beschikbare toetsen
 0.5:Nn
 0.6:Volgend bestand
 0.7:Qq
@@ -15,4 +15,5 @@
 2.0:Meer
 2.1:<STDIN>
 
-</div>
+1.3:optie /Tabs moet /T1..9 zijn (standaardwaarde: 4)
+
