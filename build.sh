@@ -4,8 +4,7 @@ if [ x"${COMPILER}" = "xgcc" ] ; then
   # Note requires installation of libi86-ia16-elf DOS compat library
   export CC="ia16-elf-gcc"
   export CFLAGS="-Wall -mcmodel=small -o "
-  export LDFLAGS="-li86"
-  TARGET="more.exe"
+  export LDFLAGS="-li86 -Wl,-Map=more.map"
 
 elif [ x"${COMPILER}" = "xwatcom" ] ; then
   if [ -z "${WATCOM}" ] ; then
@@ -16,9 +15,8 @@ elif [ x"${COMPILER}" = "xwatcom" ] ; then
   export PATH=${PATH}:${WATCOM}/binl64
   export INCLUDE=${WATCOM}/h
   export CC="wcl"
-  export CFLAGS="-bt=DOS -bcl=DOS -D__MSDOS__ -ms -lr -fe="
+  export CFLAGS="-q -bt=DOS -bcl=DOS -D__MSDOS__ -ms -lr -fe="
   export LDFLAGS=""
-  TARGET="more.exe"
 
 elif [ x"${COMPILER}" = "xwatcom-emu" ] ; then
   dosemu -q -td -K . -E "build.bat watcom"
@@ -35,8 +33,24 @@ else
   exit 1
 fi
 
-# if you want to build without kitten uncomment the following
-# export CFLAGS="-DNOCATS ${CFLAGS}"
-# TARGET=_${TARGET}
+export EXTRA_OBJS=
 
-make -C src ${TARGET}
+export EXTRA_OBJS="${EXTRA_OBJS} tnyprntf.obj"
+# if you want to build without tnyprntf comment the above and uncomment
+# the following
+# export CFLAGS="-DNOPRNTF ${CFLAGS}"
+
+export EXTRA_OBJS="${EXTRA_OBJS} kitten.obj"
+# if you want to build without kitten comment the above and uncomment
+# the following
+# export CFLAGS="-DNOCATS ${CFLAGS}"
+
+export UPXARGS="upx --8086 --best"
+# if you don't want to use UPX set
+#     UPXARGS=true
+# if you use UPX: then options are
+#     --8086 for 8086 compatibility
+#   or
+#     --best for smallest
+
+make -C src

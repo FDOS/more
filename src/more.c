@@ -35,22 +35,13 @@
 	
 */
 
-#if 1
-int Xprintf(const char * fmt, ...);
-int Xsprintf(char *, const char * fmt, ...);
-#define PRINTF Xprintf
-#define SPRINTF Xsprintf
-#else
-#include <stdio.h>
-#define PRINTF printf
-#define SPRINTF sprintf
-#endif
 #include <stdlib.h>			/* for _splitpath, _makepath */
 #include <dos.h>			/* for findfirst, findnext */
 #include <bios.h>			/* for _bios_keybrd - see keypress() */
 #include <fcntl.h>
 
 #include "../kitten/kitten.h"		/* Cats message library */
+#include "../tnyprntf/tnyprntf.h"	/* Avoid stdio */
 
 #if defined(__TURBOC__)
 #include <dir.h>			/* for findfirst, findnext */
