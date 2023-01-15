@@ -430,7 +430,7 @@ more (int pfile, const char *descr, const char *prompt)
 
 	      PRINTF( "-- %s -- %s (%u)--", prompt, descr, linecount);
 	      key = keypress();
-	      PRINTF("%40s\r","");
+	      PRINTF("\r%79s\r","");
 	      nlines = 0;
 
 #if 0 /* debugging */
